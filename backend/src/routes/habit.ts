@@ -53,18 +53,19 @@ export async function habitRouter(fastify: FastifyInstance) {
 
     // Ve todos os Habitos Registrados no DB da data passada
     fastify.get('/day', async (request) => {
+
         const getDayParams = z.object({
             date: z.coerce.date()
         })
 
         const { date } = getDayParams.parse(request.query)
-        console.log('Date: ', date)
+        // console.log('Date: ', date)
 
         const parsedDate = dayjs(date).startOf('day')
-        console.log('parsedDate: ', parsedDate.toDate())
+        // console.log('parsedDate: ', parsedDate.toDate())
         
         const weekDay = parsedDate.get('day')
-        console.log('weekday: ', weekDay)
+        // console.log('weekday: ', weekDay)
         
         // todos habitos possiveis
         
@@ -95,13 +96,14 @@ export async function habitRouter(fastify: FastifyInstance) {
 
         })
 
-        console.log('day:', day)
-        console.log('possible:', possibleHabits)
-
+        // console.log('day:', day)
+        // console.log('possible:', possibleHabits)
+        
         const completedHabits = day?.dayHabits.map((dayHabit) => {
             return dayHabit.habit_id
         })
-
+        
+        // console.log('completedHabits:', completedHabits)
         
 
         return {
@@ -109,5 +111,95 @@ export async function habitRouter(fastify: FastifyInstance) {
             completedHabits,
         }
 
+    })
+
+    // Completa e descompleta um habito
+    fastify.patch('/habits/:id/toggle', async (request) => {
+        
+        const completeHabitParams = z.object({
+            id: z.string().uuid(),
+        })
+
+        const { id } = completeHabitParams.parse(request.params)
+
+        const today = dayjs().startOf('day').toDate()
+
+        let day = await prisma.day.findUnique({
+            where: {
+                date: today
+            }
+        })
+
+        if (!day) {
+            day = await prisma.day.create({
+                data: {
+                    date: today,
+                }
+            })
+        }
+
+        const dayHabit = await prisma.dayHabit.findUnique({
+            where: {
+                day_id_habit_id: {
+                    day_id: day.id,
+                    habit_id: id,
+                }
+            }
+        })
+
+        if (dayHabit) {
+            // remover a marcação de completo
+            await prisma.dayHabit.delete({
+                where: {
+                    id: dayHabit.id,
+                }
+            })
+        } else {
+            await prisma.dayHabit.create({
+                data: {
+                    day_id: day.id,
+                    habit_id: id,
+                }
+            })
+        }
+
+        // completa habito do dia
+        await prisma.dayHabit.create({
+            data: {
+                day_id: day.id,
+                habit_id: id,
+            }
+        })
+
+    })
+
+    // Sumario da data
+    fastify.get('/summary', async (request) => {
+        const summary = await prisma.$queryRaw`
+            SELECT 
+                D.id, 
+                D.date, (
+                    SELECT 
+                        cast(count(*) as float) 
+                    FROM day_habits DH
+                    WHERE DH.day_id = D.id
+                ) as completed,
+                (
+                    SELECT
+                        cast(count(*) as float)
+                    FROM habit_week_days HWD
+                    JOIN habits H
+                        ON H.id = HWD.habit_id
+                    WHERE 
+                        HWD.week_day = cast(strftime('%w', D.date/1000, 'unixepoch') as int)
+                        AND H.created_at <= D.date
+                ) as amount
+
+                
+                
+            FROM days D
+        `
+
+        return summary
     })
 }
