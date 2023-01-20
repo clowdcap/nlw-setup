@@ -23,7 +23,7 @@ export default function App() {
 
   return (
     <View style={ styles.container }>
-      <Text style={ styles.text }>App Mobile</Text>
+      <Text style={ styles.text }>Luana, eu te amo</Text>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
     </View>
   )
