@@ -173,7 +173,7 @@ export async function habitRouter(fastify: FastifyInstance) {
 
     })
 
-    // Sumario da data
+    // Resumo da data
     fastify.get('/summary', async (request) => {
         const summary = await prisma.$queryRaw`
             SELECT 

@@ -19,7 +19,7 @@ async function bootstrap() {
     fastify.register(habitRouter)
 	
     // ligar o server
-    await fastify.listen({ port: 5000 })
+    await fastify.listen({ port: 5000, host: '0.0.0.0' })
 }
 
 // inicia o fastify
