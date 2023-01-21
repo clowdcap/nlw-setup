@@ -101,7 +101,7 @@ export async function habitRouter(fastify: FastifyInstance) {
         
         const completedHabits = day?.dayHabits.map((dayHabit) => {
             return dayHabit.habit_id
-        })
+        }) ?? []
         
         // console.log('completedHabits:', completedHabits)
         
