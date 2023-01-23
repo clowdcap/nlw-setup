@@ -29,13 +29,13 @@ export const SummaryTable = () => {
     useEffect(() => {
         api.get('summary')
             .then((response) => {
-                console.log(response.data)  
+                // console.log(response.data)  
                 setSummary(response.data)
             })
         }, [])
         
     useEffect(() => {
-        console.log('summary', summary)
+        // console.log('summary', summary)
     }, [summary])
     
     return (
@@ -50,7 +50,7 @@ export const SummaryTable = () => {
 
             <div className="grid grid-rows-7 grid-flow-col gap-3">
                 
-                {summaryDates.map((date, i) => {
+                {summary.length > 0 && summaryDates.map((date, i) => {
                     const dayInSummary = summary.find(day => {
                         return dayjs(date).isSame(day.date, 'day')
                     })
@@ -60,7 +60,7 @@ export const SummaryTable = () => {
                             key={date.toString()}
                             date={date}
                             amount={dayInSummary?.amount} 
-                            completed={dayInSummary?.completed} 
+                            defaltCompleted={dayInSummary?.completed} 
                         />
                     )
                 })}
